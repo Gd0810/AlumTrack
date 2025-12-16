@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Check-in Result</title>
+</head>
+<body>
+
+{% if not_found %}
+    <h3 style="color:red;">❌ You are not registered</h3>
+{% else %}
+    <h3>✅ Registration Found</h3>
+
+    <ul>
+        {% for key, value in user.items() %}
+            <li><strong>{{ key }}:</strong> {{ value }}</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Take Photo for Check-in</h3>
+
+    <button onclick="startCamera()">📷 Open Camera</button>
+    <video id="video" width="320"></video>
+
+
+    <canvas id="canvas" style="display:none;"></canvas>
+
+   <script>
+const video = document.getElementById("video");
+
+async function startCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: { ideal: "environment" }, // back camera
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            },
+            audio: false
+        });
+
+        video.srcObject = stream;
+        video.setAttribute("playsinline", true); // VERY IMPORTANT for mobile
+        await video.play();
+
+    } catch (err) {
+        alert("Camera error: " + err.message);
+        console.error(err);
+    }
+}
+
+startCamera();
+</script>
+
+{% endif %}
+
+</body>
+</html>
