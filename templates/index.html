@@ -1,16 +1,104 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Alumni Check-in</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --bg:#f6f9ff;
+            --card:#ffffff;
+            --primary:#3366ff;
+            --muted:#6b7280;
+            --radius:12px;
+            --max-width:520px;
+        }
+        *{box-sizing:border-box}
+        body{
+            margin:0;
+            font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            background:linear-gradient(180deg, #eef2ff 0%, var(--bg) 100%);
+            color:#111827;
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
+            min-height:100vh;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:32px;
+        }
+        .container{
+            width:100%;
+            max-width:var(--max-width);
+        }
+        .card{
+            background:var(--card);
+            border-radius:var(--radius);
+            box-shadow:0 6px 30px rgba(13, 38, 76, 0.08);
+            padding:28px;
+            margin:0 auto;
+        }
+        header{
+            display:flex;
+            align-items:center;
+            gap:12px;
+            margin-bottom:18px;
+        }
+        .logo{
+            width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--primary),#60a5fa);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;
+        }
+        h1{font-size:20px;margin:0}
+        p.lead{margin:8px 0 18px;color:var(--muted);font-size:14px}
+        form{display:flex;flex-direction:column;gap:12px}
+        label{font-size:13px;color:var(--muted)}
+        input[type="text"], input[type="tel"]{
+            width:100%;padding:12px 14px;border-radius:8px;border:1px solid #e6edf8;background:transparent;font-size:15px;
+            outline:none;transition:box-shadow .15s, border-color .15s;
+        }
+        input:focus{border-color:var(--primary);box-shadow:0 6px 20px rgba(51,102,255,0.08)}
+        .actions{display:flex;gap:10px;align-items:center}
+        .btn{padding:10px 14px;border-radius:8px;border:0;cursor:pointer;font-weight:600}
+        .btn.primary{background:var(--primary);color:white}
+        .btn.ghost{background:transparent;border:1px solid #e6edf8;color:var(--muted)}
+        .note{font-size:13px;color:var(--muted);margin-top:8px}
+        footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+        @media (max-width:420px){
+            body{padding:18px}
+            .card{padding:18px}
+            h1{font-size:18px}
+        }
+    </style>
 </head>
 <body>
-    <h2>Alumni Reunion Check-in</h2>
+    <div class="container">
+        <div class="card">
+            <header>
+                <div class="logo">A</div>
+                <div>
+                    <h1>Alumni Reunion Check-in</h1>
+                    <p class="lead">Enter your phone number to check in. We'll confirm your registration and let you check-in with a photo.</p>
+                </div>
+            </header>
 
-    <form method="post">
-        <label>Phone Number:</label><br>
-        <input type="text" name="phone" required>
-        <br><br>
-        <button type="submit">Check</button>
-    </form>
+            <form method="post" novalidate>
+                <div>
+                    <label for="phone">Phone Number</label>
+                    <input id="phone" name="phone" type="tel" placeholder="e.g. +1 555 123 4567" required pattern="[0-9+\-\s()]{7,}" />
+                </div>
+
+                <div class="actions">
+                    <button class="btn primary" type="submit">Check</button>
+                    <button class="btn ghost" type="reset">Clear</button>
+                </div>
+
+                <p class="note">Tip: use the country code for best matching. No photo will be stored unless you submit it at check-in.</p>
+            </form>
+
+            <footer>© Alumni Reunion • Friendly event check‑in</footer>
+        </div>
+    </div>
 </body>
 </html>

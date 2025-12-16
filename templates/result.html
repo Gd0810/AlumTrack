@@ -1,57 +1,148 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Check-in Result</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root{--primary:#2c6ef6;--bg:#f6f9ff;--card:#fff;--muted:#6b7280;--radius:12px;--max-width:760px}
+        *{box-sizing:border-box}
+        body{font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto; margin:0; background:linear-gradient(180deg,#eef2ff 0%,var(--bg) 100%); color:#111827; min-height:100vh; display:flex;align-items:flex-start;justify-content:center;padding:24px}
+        .container{width:100%;max-width:var(--max-width)}
+        .card{background:var(--card);border-radius:var(--radius);box-shadow:0 8px 28px rgba(15,23,42,0.08);padding:22px;margin:10px auto}
+        .status{display:flex;gap:12px;align-items:center}
+        .status h2{margin:0;font-size:18px}
+        .badge{font-size:22px}
+        .details{margin-top:12px}
+        dl{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+        dt{font-weight:600;color:var(--muted);font-size:13px}
+        dd{margin:0;font-size:15px}
+        .camera{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+        video, img.preview{width:100%;height:100%;max-height:360px;border-radius:10px;object-fit:cover;background:#000}
+        .camera-controls{display:flex;gap:10px;align-items:center}
+        .btn{padding:10px 14px;border-radius:8px;border:0;cursor:pointer;font-weight:600}
+        .btn.primary{background:var(--primary);color:#fff}
+        .btn.ghost{background:transparent;border:1px solid #e6edf8;color:var(--muted)}
+        .muted{color:var(--muted);font-size:13px;margin-top:8px}
+        @media (max-width:700px){ .camera{grid-template-columns:1fr} dl{grid-template-columns:1fr} }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <div class="card">
+            {% if not_found %}
+                <div class="status">
+                    <div class="badge">❌</div>
+                    <div>
+                        <h2>Not Registered</h2>
+                        <p class="muted">We couldn't find a registration for that phone number.</p>
+                    </div>
+                </div>
+                <div style="margin-top:14px"><a href="/" class="btn ghost">← Back</a></div>
+            {% else %}
+                <div class="status">
+                    <div class="badge">✅</div>
+                    <div>
+                        <h2>Registration Found</h2>
+                        <p class="muted">Please take a photo to complete the check-in process.</p>
+                    </div>
+                </div>
 
-{% if not_found %}
-    <h3 style="color:red;">❌ You are not registered</h3>
-{% else %}
-    <h3>✅ Registration Found</h3>
+                <div class="details">
+                    <dl>
+                        {% for key, value in user.items() %}
+                            <dt>{{ key }}</dt>
+                            <dd>{{ value }}</dd>
+                        {% endfor %}
+                    </dl>
+                </div>
 
-    <ul>
-        {% for key, value in user.items() %}
-            <li><strong>{{ key }}:</strong> {{ value }}</li>
-        {% endfor %}
-    </ul>
+                <div class="camera">
+                    <div>
+                        <video id="video" playsinline></video>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:12px">
+                        <img id="preview" class="preview" alt="Captured photo will appear here" />
+                        <div class="camera-controls">
+                            <button class="btn primary" id="startBtn">Open Camera</button>
+                            <button class="btn primary" id="captureBtn" disabled>Capture</button>
+                            <button class="btn ghost" id="stopBtn" disabled>Stop</button>
+                        </div>
+                        <p class="muted">Captured images are kept in your browser until you submit them to the server (if enabled).</p>
+                    </div>
+                </div>
 
-    <h3>Take Photo for Check-in</h3>
+                <form id="photoForm" method="post" enctype="multipart/form-data" style="margin-top:12px">
+                    <input type="hidden" name="photo" id="photoData" />
+                    <div style="display:flex;gap:10px;margin-top:6px">
+                        <button class="btn primary" type="submit">Submit Check-in</button>
+                        <a href="/" class="btn ghost">Back</a>
+                    </div>
+                </form>
 
-    <button onclick="startCamera()">📷 Open Camera</button>
-    <video id="video" width="320"></video>
+                <canvas id="canvas" style="display:none"></canvas>
 
+                <script>
+    const startBtn = document.getElementById('startBtn');
+    const captureBtn = document.getElementById('captureBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const preview = document.getElementById('preview');
+    const photoData = document.getElementById('photoData');
+    let stream = null;
 
-    <canvas id="canvas" style="display:none;"></canvas>
-
-   <script>
-const video = document.getElementById("video");
-
-async function startCamera() {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-                facingMode: { ideal: "environment" }, // back camera
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
-            },
-            audio: false
-        });
-
-        video.srcObject = stream;
-        video.setAttribute("playsinline", true); // VERY IMPORTANT for mobile
-        await video.play();
-
-    } catch (err) {
-        alert("Camera error: " + err.message);
-        console.error(err);
+    async function startCamera() {
+        if (stream) return;
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+            video.srcObject = stream;
+            await video.play();
+            captureBtn.disabled = false;
+            stopBtn.disabled = false;
+        } catch (err) {
+            alert('Camera error: ' + err.message);
+            console.error(err);
+        }
     }
-}
 
-startCamera();
-</script>
+    function stopCamera() {
+        if (!stream) return;
+        stream.getTracks().forEach(t => t.stop());
+        stream = null;
+        video.pause();
+        video.srcObject = null;
+        captureBtn.disabled = true;
+        stopBtn.disabled = true;
+    }
 
-{% endif %}
+    function capturePhoto() {
+        if (!stream) return;
+        const w = video.videoWidth || 640;
+        const h = video.videoHeight || 480;
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, w, h);
+        const dataURL = canvas.toDataURL('image/jpeg', 0.9);
+        preview.src = dataURL;
+        photoData.value = dataURL; // set hidden input for server submission
+    }
 
+    startBtn.addEventListener('click', (e)=>{ e.preventDefault(); startCamera(); });
+    stopBtn.addEventListener('click', (e)=>{ e.preventDefault(); stopCamera(); });
+    captureBtn.addEventListener('click', (e)=>{ e.preventDefault(); capturePhoto(); });
+
+    // auto-start camera on modern devices
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        // don't auto-start on mobile to avoid permission spam; wait for user interaction
+    }
+
+                </script>
+            {% endif %}
+        </div>
+    </div>
 </body>
 </html>
