@@ -84,9 +84,13 @@
             </header>
 
             <form method="post" novalidate>
+                {% if error %}
+                    <div style="color:#b91c1c;font-weight:600;margin-bottom:8px">{{ error }}</div>
+                {% endif %}
+
                 <div>
                     <label for="phone">Phone Number</label>
-                    <input id="phone" name="phone" type="tel" placeholder="e.g. +1 555 123 4567" required pattern="[0-9+\-\s()]{7,}" />
+                    <input id="phone" name="phone" type="tel" value="{{ phone or '' }}" placeholder="e.g. +1 555 123 4567" required pattern="[0-9+\-\s()]{7,}" />
                 </div>
 
                 <div class="actions">

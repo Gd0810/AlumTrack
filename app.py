@@ -15,10 +15,15 @@ os.makedirs("data", exist_ok=True)
 
 
 def find_by_phone(phone):
+    # make robust: accept None and trim input
+    if not phone:
+        return None
+    phone = phone.strip()
     with open(ALUMNI_CSV, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
-            if row["Phone Number"].strip() == phone.strip():
+            row_phone = (row.get("Phone Number") or "").strip()
+            if row_phone == phone:
                 return row
     return None
 
@@ -26,7 +31,11 @@ def find_by_phone(phone):
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
-        phone = request.form.get("phone")
+        phone = (request.form.get("phone") or "").strip()
+        # simple validation
+        if not phone:
+            return render_template("index.html", error="Please enter a phone number", phone=phone)
+
         user = find_by_phone(phone)
 
         if not user:
@@ -39,16 +48,24 @@ def index():
 
 @app.route("/checkin", methods=["POST"])
 def checkin():
-    data = request.json
-    phone = data["phone"]
-    image_data = data["image"]
+    data = request.json or {}
+    phone = (data.get("phone") or "").strip()
+    image_data = data.get("image")
+
+    if not phone or not image_data:
+        return jsonify({"error": "Missing phone or image data"}), 400
 
     user = find_by_phone(phone)
     if not user:
         return jsonify({"error": "User not found"}), 404
 
     # Save image
-    img_bytes = base64.b64decode(image_data.split(",")[1])
+    try:
+        # image_data expected in data:url;base64,xxxxx format
+        img_bytes = base64.b64decode(image_data.split(",")[1])
+    except Exception as exc:
+        return jsonify({"error": "Invalid image data", "detail": str(exc)}), 400
+
     filename = f"{phone}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
     img_path = os.path.join(PHOTO_DIR, filename)
 
